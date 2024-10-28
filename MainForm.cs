@@ -9,7 +9,7 @@ namespace ProductPriceChecker;
 
 public partial class MainForm : Form {
 	private readonly System.Windows.Forms.Timer refreshTimer = new();
-	private readonly System.Windows.Forms.Timer clockTimer = new();
+	private readonly System.Windows.Forms.Timer clockTimer   = new();
 
 	public MainForm() {
 		InitializeComponent();
@@ -17,16 +17,18 @@ public partial class MainForm : Form {
 		_ = DatabaseManager.InitializeDatabase();
 		LoadProducts();
 		
-		refreshTimer.Interval = 30 * 60 * 1000; // 30 minutes
-		refreshTimer.Tick += async (_,_) => await RefreshPrices();
+		const int refreshMinutes = 30;
+		refreshTimer.Interval = refreshMinutes * 60 * 1000;
+		refreshTimer.Tick    += async (_,_) => await RefreshPrices();
 		refreshTimer.Start();
 
+		var secondsUntilRefresh = refreshMinutes * 60;
 		clockTimer.Interval = 1000;
-		clockTimer.Tick += (_,_) => {
+		clockTimer.Tick    += (_, _) => {
 			if (Controls["nextRefreshLabel"] is not Label nextRefreshLabel) return;
 
-			var timeLeft = refreshTimer.Interval - refreshTimer.Interval * refreshTimer.Interval / refreshTimer.Interval;
-			nextRefreshLabel.Text = $"Next Refresh: {timeLeft / 60000:00}:{timeLeft % 60000 / 1000:00}";
+			nextRefreshLabel.Text = $"Next Refresh: {secondsUntilRefresh / 60:00}:{secondsUntilRefresh % 60:00}";
+			secondsUntilRefresh   = secondsUntilRefresh > 0 ? secondsUntilRefresh - 1 : 30 * 60;
 		};
 		clockTimer.Start();
 	}
